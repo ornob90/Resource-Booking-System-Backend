@@ -20,6 +20,8 @@ export async function isConflictingBooking(input: BookingInput) {
 
   const bufferEnd = moment(newEnd).add(BUFFER_MINUTES, "minutes").toDate();
 
+  console.log({bufferEnd, bufferStart})
+
   const conflicts = await prisma.booking.findMany({
     where: {
       resource,
