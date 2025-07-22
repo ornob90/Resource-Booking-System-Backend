@@ -18,12 +18,27 @@ export async function createBooking(
       return res.status(400).json({ error: "All fields are required" });
     }
 
-    const duration = moment(endTime).diff(moment(startTime), "minutes");
+    const start = moment(startTime);
+    const end = moment(endTime);
+
+    if (!start.isValid() || !end.isValid()) {
+      return res.status(400).json({ error: "Invalid date format" });
+    }
+
+    if (!start.isBefore(end)) {
+      return res.status(400).send({
+        success: false,
+        message: "Start time must be earlier than end time",
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const duration = end.diff(start, "minutes");
 
     if (duration < 15 || duration > 120) {
       return res.status(400).send({
         success: false,
-        message: "Duration Must be between 15 to 120 minutes",
+        message: "Duration must be between 15 to 120 minutes",
         timestamp: new Date().toISOString(),
       });
     }
@@ -92,7 +107,8 @@ export async function getBookings(
       data: result,
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
+  } catch (error: any) {
+    console.log("error", error.message);
     next(error);
   }
 }

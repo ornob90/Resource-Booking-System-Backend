@@ -73,7 +73,7 @@ export async function getAllBookings(
   const totalPages = Math.ceil(total / limit);
 
   return {
-    data: bookings,
+    bookings: bookings,
     total,
     page,
     limit,

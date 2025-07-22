@@ -10,6 +10,6 @@ router.get("/", bookingController.getBookings);
 router.post("/", bookingController.createBooking);
 
 // DELETE
-
+router.delete("/:id", bookingController.deleteBooking)
 
 export default router;
