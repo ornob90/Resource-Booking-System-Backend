@@ -1,6 +1,10 @@
 import * as bookingService from "../services/booking.service";
 import { NextFunction, Request, Response } from "express";
 import moment from "moment";
+import {
+  DeleteBookingReqParams,
+  GetBookingsReqQuery,
+} from "../types/booking.types";
 
 export async function createBooking(
   req: Request,
@@ -53,6 +57,67 @@ export async function createBooking(
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
+    next(error);
+  }
+}
+
+export async function getBookings(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const {
+      resource,
+      date,
+      page = "1",
+      limit = "10",
+    } = req.query as GetBookingsReqQuery;
+
+    const pagination = {
+      page: parseInt(page as string, 10) || 1,
+      limit: parseInt(limit as string, 10) || 10,
+    };
+
+    const result = await bookingService.getAllBookings(
+      resource,
+      date,
+      pagination.page,
+      pagination.limit
+    );
+
+    res.send({
+      success: true,
+      message: "Bookings fetched successfully",
+      data: result,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteBooking(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  const { id } = req.params as DeleteBookingReqParams;
+
+  if (!id) {
+    return res.status(400).send({
+      success: false,
+      message: "Missing Booking ID",
+      tiomestamp: new Date().toISOString(),
+    });
+  }
+
+  try {
+    await bookingService.deleteBooking(id);
+
+    res.send({ success: true, message: "Booking Deleted" });
+  } catch (error: any) {
+    error.status = 404;
     next(error);
   }
 }
