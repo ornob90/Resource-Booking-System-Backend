@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import prisma from "./lib/prisma";
 dotenv.config();
 
-const PORT = process.env.PORT || 8081;
+const PORT = 8081;
 
 const server = http.createServer(app);
 
