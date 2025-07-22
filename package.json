@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "ts-node-dev src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy"
   },
   "repository": {
     "type": "git",
@@ -14,6 +18,7 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "target": "es2016",
   "bugs": {
     "url": "https://github.com/ornob90/Resource-Booking-System-Backend/issues"
   },

@@ -1,0 +1,10 @@
+{
+  "build": {
+    "env": "production",
+    "cmd": "npm run build"
+  },
+  "start": {
+    "cmd": "npm run start",
+    "env": "production"
+  }
+}
