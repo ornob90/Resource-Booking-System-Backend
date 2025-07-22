@@ -1,8 +1,7 @@
-import { PrismaClient } from "@prisma/client";
 import moment from "moment";
 import { BookingInput } from "../types/booking.types";
+import prisma from "../lib/prisma";
 
-const prisma = new PrismaClient();
 
 const BUFFER_MINUTES = 10;
 const MIN_DURATION_MINUTES = 15;
