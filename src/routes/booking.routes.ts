@@ -8,8 +8,9 @@ router.get("/", bookingController.getBookings);
 
 // POST
 router.post("/", bookingController.createBooking);
+router.post("/available-slots", bookingController.getAvailableSlots);
 
 // DELETE
-router.delete("/:id", bookingController.deleteBooking)
+router.delete("/:id", bookingController.deleteBooking);
 
 export default router;
