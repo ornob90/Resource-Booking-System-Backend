@@ -139,7 +139,7 @@ export async function getAvailableSlots(
   next: NextFunction
 ) {
   try {
-    const { currentTime } = req.body;
+    const { currentTime, timezone } = req.body;
 
     if (!currentTime) {
       return res.status(400).json({
@@ -150,7 +150,7 @@ export async function getAvailableSlots(
     }
 
     const result =
-      await bookingService.getGlobalAvailableTimeSlots(currentTime);
+      await bookingService.getGlobalAvailableTimeSlots(currentTime, timezone);
 
     res.status(200).json({
       success: true,

@@ -1,10 +1,11 @@
-import moment from "moment";
+import moment from "moment-timezone";
 import { BookingInput } from "../types/booking.types";
 import prisma from "../lib/prisma";
 
 const BUFFER_MINUTES = 10;
 export const MIN_DURATION_MINUTES = 15;
 export const MAX_DURATION_MINUTES = 120;
+const MAX_AVAILABLE_SLOT_HOURS = 12;
 
 export async function isConflictingBooking(input: BookingInput) {
   const { resource, startTime, endTime } = input;
@@ -12,7 +13,7 @@ export async function isConflictingBooking(input: BookingInput) {
   const newStart = moment(startTime).toDate();
   const newEnd = moment(endTime).toDate();
 
-  console.log({newStart, newEnd})
+  console.log({ newStart, newEnd });
 
   const bufferStart = moment(newStart)
     .subtract(BUFFER_MINUTES, "minutes")
@@ -20,7 +21,7 @@ export async function isConflictingBooking(input: BookingInput) {
 
   const bufferEnd = moment(newEnd).add(BUFFER_MINUTES, "minutes").toDate();
 
-  console.log({bufferEnd, bufferStart})
+  console.log({ bufferEnd, bufferStart });
 
   const conflicts = await prisma.booking.findMany({
     where: {
@@ -37,10 +38,7 @@ export async function isConflictingBooking(input: BookingInput) {
   return conflicts.length > 0;
 }
 
-export async function createBooking(
-  input: BookingInput,
-  timezone = "UTC"
-) {
+export async function createBooking(input: BookingInput, timezone = "UTC") {
   const startUtc = moment.tz(input.startTime, timezone).utc().toDate();
   const endUtc = moment.tz(input.endTime, timezone).utc().toDate();
 
@@ -55,8 +53,11 @@ export async function createBooking(
   return booking;
 }
 
-export async function getGlobalAvailableTimeSlots(currentTime: string) {
-  const now = moment(currentTime);
+export async function getGlobalAvailableTimeSlots(
+  currentTime: string,
+  timezone: string
+) {
+  const now = moment.tz(currentTime, timezone);
   if (!now.isValid()) throw new Error("Invalid currentTime");
 
   const bookings = await prisma.booking.findMany({
@@ -78,41 +79,59 @@ export async function getGlobalAvailableTimeSlots(currentTime: string) {
   }[] = [];
 
   if (bookings.length === 0) {
+    const defaultEnd = moment(now).add(2, "hours");
     return [
       {
         title: "Available",
         resource: "Any",
         start: now.toISOString(),
-        end: moment(now).add(2, "hours").toISOString(),
+        end: defaultEnd.toISOString(),
       },
     ];
   }
 
   let lastEnd = now;
 
-  for (const booking of bookings) {
-    const start = moment(booking.startTime).subtract(BUFFER_MINUTES, "minutes");
-    const end = moment(booking.endTime).add(BUFFER_MINUTES, "minutes");
-
-    if (lastEnd.isBefore(start)) {
+  const addChunkedSlots = (
+    start: moment.Moment,
+    end: moment.Moment,
+    resource: string
+  ) => {
+    const chunkSize = MAX_AVAILABLE_SLOT_HOURS;
+    let chunkStart = moment(start);
+    while (chunkStart.isBefore(end)) {
+      const chunkEnd = moment.min(
+        moment(chunkStart).add(chunkSize, "hours"),
+        end
+      );
       slots.push({
         title: "Available",
-        resource: booking.resource,
-        start: lastEnd.toISOString(),
-        end: start.toISOString(),
+        resource,
+        start: chunkStart.toISOString(),
+        end: chunkEnd.toISOString(),
       });
+      chunkStart = moment(chunkEnd);
+    }
+  };
+
+  for (const booking of bookings) {
+    const bookingStart = moment
+      .tz(booking.startTime, timezone)
+      .subtract(BUFFER_MINUTES, "minutes");
+    const bookingEnd = moment
+      .tz(booking.endTime, timezone)
+      .add(BUFFER_MINUTES, "minutes");
+
+    if (lastEnd.isBefore(bookingStart)) {
+      addChunkedSlots(lastEnd, bookingStart, booking.resource);
     }
 
-    lastEnd = moment.max(lastEnd, end);
+    lastEnd = moment.max(lastEnd, bookingEnd);
   }
 
-  // Optionally add open-ended slot after last booking
-  slots.push({
-    title: "Available",
-    resource: "Any",
-    start: lastEnd.toISOString(),
-    end: moment(lastEnd).add(2, "hours").toISOString(),
-  });
+  // Add final open-ended slot
+  const finalSlotEnd = moment(lastEnd).add(2, "hours");
+  addChunkedSlots(lastEnd, finalSlotEnd, "Any");
 
   return slots;
 }
