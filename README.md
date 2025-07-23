@@ -80,8 +80,6 @@ src/
 - **TypeScript**
 - **Prisma + SQLite**
 - **Moment.js** for time/date handling
-- **Cookie-parser** for reading timezone
-- **ESModules** support with `.ts` files
 
 ---
 
