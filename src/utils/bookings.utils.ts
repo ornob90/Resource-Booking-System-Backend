@@ -53,7 +53,6 @@ export function getBookingsAnalytics(
         new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
     );
 
-  // Next meeting logic
   if (sortedBookings.length) {
     nextMeetingIn = getNextMeetingTimeRange(
       new Date(sortedBookings[0].startTime),
@@ -61,7 +60,6 @@ export function getBookingsAnalytics(
     );
   }
 
-  // Bookings count logic
   const today = moment.tz(timezone).startOf("day");
   const thisWeek = moment.tz(timezone).startOf("week");
   const thisMonth = moment.tz(timezone).startOf("month");
@@ -75,17 +73,14 @@ export function getBookingsAnalytics(
   bookings.forEach((b) => {
     const start = moment.tz(b.startTime, timezone);
 
-    // Count per period
-    if (start.isSameOrAfter(today)) totalToday++;
-    if (start.isSameOrAfter(thisWeek)) totalThisWeek++;
-    if (start.isSameOrAfter(thisMonth)) totalThisMonth++;
+    if (start.isSame(today, "day")) totalToday++;
+    if (start.isSame(thisWeek, "week")) totalThisWeek++;
+    if (start.isSame(thisMonth, "month")) totalThisMonth++;
 
-    // Resource counts
     if (b.resource) {
       resourceCounts[b.resource] = (resourceCounts[b.resource] || 0) + 1;
     }
 
-    // Hour counts
     const hour = start.hour();
     hourCounts[hour] = (hourCounts[hour] || 0) + 1;
   });
@@ -93,7 +88,6 @@ export function getBookingsAnalytics(
   const mostBookedResource =
     Object.entries(resourceCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
 
-  // Determine peak hour
   const peakHour = Object.entries(hourCounts).sort(
     (a, b) => b[1] - a[1]
   )[0]?.[0];
