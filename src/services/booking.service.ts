@@ -1,6 +1,7 @@
 import moment from "moment-timezone";
 import { BookingInput } from "../types/booking.types";
 import prisma from "../lib/prisma";
+import { getBookingsAnalytics } from "../utils/bookings.utils";
 
 const BUFFER_MINUTES = 10;
 export const MIN_DURATION_MINUTES = 15;
@@ -140,7 +141,8 @@ export async function getAllBookings(
   resource?: string,
   date?: string,
   page = 1,
-  limit = 10
+  limit = 10,
+  timezone = "UTC"
 ) {
   const where: any = {};
   if (resource) where.resource = resource;
@@ -164,6 +166,8 @@ export async function getAllBookings(
 
   const totalPages = Math.ceil(total / limit);
 
+  const analytics = getBookingsAnalytics(bookings, timezone);
+
   return {
     bookings: bookings,
     total,
@@ -172,6 +176,7 @@ export async function getAllBookings(
     totalPages,
     hasPrevPage: page > 1,
     hasNextPage: page < totalPages,
+    analytics
   };
 }
 

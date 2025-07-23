@@ -107,7 +107,9 @@ export async function getBookings(
       date,
       page = "1",
       limit = "10",
+      timezone = "UTC",
     } = req.query as GetBookingsReqQuery;
+
 
     const pagination = {
       page: parseInt(page as string, 10) || 1,
@@ -118,7 +120,8 @@ export async function getBookings(
       resource,
       date,
       pagination.page,
-      pagination.limit
+      pagination.limit,
+      timezone
     );
 
     res.send({
